@@ -4,7 +4,7 @@ import random
 def get (action, args):
     URL = "http://127.0.0.1:1235/" + action
     r = requests.get(url = URL, params = args)
-    # print (r)
+    print (r)
 
 session = str(random.randint(0, 100000))
 

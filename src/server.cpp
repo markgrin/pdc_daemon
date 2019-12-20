@@ -27,44 +27,24 @@ struct worker {
     worker(worker const&) = delete;
     worker& operator=(worker const&) = delete;
 
-    explicit worker(net::io_context& ioc, tcp::acceptor& acceptor, session_manager& manager)
+    explicit worker(net::io_context& ioc, tcp::socket socket, session_manager& manager)
         :
     session_manager_ (manager),
-    socket_ (ioc),
-    acceptor_ (acceptor),
-    ioc_ (ioc)
+    socket_ (std::move(socket)),
+    ioc_ (ioc),
+    ptr_(this)
     {}
 
     session_manager& session_manager_;
     tcp::socket socket_;
-    tcp::acceptor& acceptor_;
     net::io_context& ioc_;
+    std::shared_ptr<worker> ptr_;
 
     void start() {
-        accept();
+        read_request();
     }
 
     private:
-
-    void accept () {
-         beast::error_code ec;
-         socket_.close(ec);
-         buffer_.consume(buffer_.size());
-
-         acceptor_.async_accept(
-             socket_,
-             [this](beast::error_code ec)
-             {
-                 if (ec)
-                 {
-                     accept();
-                 }
-                 else
-                 {
-                     read_request();
-                 }
-             });
-    }
 
     boost::optional<http::parser<true, http::buffer_body>> parser_;
 
@@ -81,7 +61,7 @@ struct worker {
             [this](beast::error_code ec, std::size_t)
             {
                 if (ec) {
-                    accept();
+                    ptr_.reset();
                 }
                 else {
                     process_request(parser_->get());
@@ -117,11 +97,23 @@ struct worker {
             [this](beast::error_code ec, std::size_t)
             {
                 socket_.shutdown(tcp::socket::shutdown_send, ec);
-                accept();
+                ptr_.reset();
             });
     }
 
 };
+
+void accept (net::io_context& ioc, boost::asio::ip::tcp::acceptor& acceptor, pdc::session_manager& manager) {
+    acceptor.async_accept(
+        [&manager, &ioc, &acceptor](beast::error_code ec, tcp::socket socket)
+        {
+            if (!ec)
+            {
+                (new worker(ioc, std::move(socket), manager))->start();
+            }
+            accept(ioc, acceptor, manager);
+        });
+}
 
 void start(config conf)
 {
@@ -131,7 +123,7 @@ void start(config conf)
 
     session_manager manager;
 
-    net::io_context ioc(10);
+    net::io_context ioc;
     boost::asio::ip::tcp::acceptor acceptor(ioc);
     boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
     acceptor.open(endpoint.protocol());
@@ -139,12 +131,7 @@ void start(config conf)
     acceptor.bind(endpoint);
     acceptor.listen();
 
-    std::list<worker> list;
-    std::cout << "Creating workers\n";
-    for (std::size_t i = 0; i < 10; i++) {
-        list.emplace_back(ioc, acceptor, manager);
-        list.back().start();
-    }
+    accept(ioc, acceptor, manager);
 
     ioc.run();
 }
