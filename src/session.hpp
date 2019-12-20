@@ -5,33 +5,51 @@
 #include <mutex>
 #include <map>
 #include <thread>
+#include <deque>
 
 namespace pdc {
 
 class session {
 
-    std::size_t statistics = 0u;
-    std::mutex lock;
+    std::deque<std::size_t> setup_;
+    std::deque<std::size_t> talk_;
+    std::size_t stat_size_;
 
     public:
+    std::mutex lock_; // locking is delegated to caller
 
-    void update_statistics () {
-        std::lock_guard guard(lock);
-        statistics++;
+    explicit session (std::size_t stat_size)
+    :
+    stat_size_(stat_size) {
+    }
+
+    void add(std::size_t setup, std::size_t talk) {
+        setup_.push_back(setup);
+        talk_.push_back(talk);
+        if (setup_.size() > stat_size_) {
+            setup_.pop_front();
+            talk_.pop_front();
+        }
+    }
+
+    std::size_t get(std::size_t free, std::size_t incoming) const {
+        return std::max(incoming, free) - incoming; // real predictive dialer would implement some algorithm here
     }
 
 };
 
 class session_manager {
-    std::mutex lock;
-    std::map<std::string, session> storage;
+    std::mutex lock_;
+    std::map<std::string, session> storage_;
+
+    std::string begin(std::string session, std::size_t stat_size);
+    std::string add(std::string session, std::size_t setup, std::size_t talk);
+    std::string get(std::string session, std::size_t free, std::size_t incoming);
+    std::string end(std::string session);
 
     public:
 
-    std::string action(const std::string& string) {
-        std::this_thread::sleep_for(std::chrono::seconds(3));
-        return "{ \"result\" : true }";
-    }
+    std::string action(std::string string);
 };
 
 } // namespace pdc

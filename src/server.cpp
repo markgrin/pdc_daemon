@@ -72,6 +72,7 @@ struct worker {
 
     void read_request() {
         parser_.emplace();
+        buffer_.reset();
 
         http::async_read(
             socket_,
@@ -82,12 +83,14 @@ struct worker {
                 if (ec) {
                     accept();
                 }
-                else
+                else {
                     process_request(parser_->get());
+                }
             });
     }
 
     void process_request(http::request<http::buffer_body> const& req) {
+        req.body();
         send_response(session_manager_.action(std::string(req.target())));
     }
 
