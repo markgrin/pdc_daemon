@@ -2,6 +2,12 @@
 
 namespace {
 
+/**
+ * Helper function to parse uri
+ * @param string string with uri
+ * @param command out argument, command from uri.
+ * @param args out argument, args of uri
+ */
 void parse_args(std::string string, std::string& command, std::map<std::string, std::string>& args) {
     if (string.empty())
         return ;
@@ -42,7 +48,7 @@ std::string session_manager::action(std::string string) {
             if (it == storage_.end())
                 return "{ \"error\" : \"bad_input\"}";
             {
-                std::lock_guard<std::mutex> guard(it->second.lock_);
+                std::lock_guard<std::mutex> guard(it->second.lock_); // guarantee that session is not locked
             }
             storage_.erase(args["session"]);
         } else if (command == "add") {
@@ -65,8 +71,9 @@ std::string session_manager::action(std::string string) {
             if (it == storage_.end())
                 return "{ \"error\" : \"bad_input\"}";
             std::lock_guard<std::mutex> guard(it->second.lock_);
-            master_guard.unlock();
-            it->second.get(std::stoull(args["free"]), std::stoull(args["incoming"]));
+            master_guard.unlock(); // next call is time consuming, but only session lock is used
+            auto result = it->second.get(std::stoull(args["free"]), std::stoull(args["incoming"]));
+            return "{ \"call\" : \"" + std::to_string(result) + "\" }";
         } else {
             return "{ \"error\" : \"bad_input\"}";
         }

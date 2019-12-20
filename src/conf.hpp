@@ -6,10 +6,18 @@
 
 namespace pdc {
 
+/**
+ * Configuration. All fields should be initialised in default constructor.
+ */
 struct config {
     int port = 1235;
 };
 
+/**
+ * Parses JSON config. Throws on errors.
+ * @param filename filename of config
+ * @return parsed config
+ */
 config read_config (const std::string& filename);
 
 } // namespace pdc

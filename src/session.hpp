@@ -9,6 +9,9 @@
 
 namespace pdc {
 
+/**
+ * Session - stores, updates statistics. Calculates number of calls to make based on statistics.
+ */
 class session {
 
     std::deque<std::size_t> setup_;
@@ -16,7 +19,7 @@ class session {
     std::size_t stat_size_;
 
     public:
-    std::mutex lock_; // locking is delegated to caller
+    std::mutex lock_; /// locking is delegated to caller
 
     explicit session (std::size_t stat_size)
     :
@@ -38,6 +41,9 @@ class session {
 
 };
 
+/**
+ * Session manager. It stores, manages sessions. Directs reqeusts to them.
+ */
 class session_manager {
     std::mutex lock_;
     std::map<std::string, session> storage_;
@@ -49,6 +55,11 @@ class session_manager {
 
     public:
 
+    /**
+     * Handles request
+     * @param string uri of the request
+     * @return result of handling
+     */
     std::string action(std::string string);
 };
 

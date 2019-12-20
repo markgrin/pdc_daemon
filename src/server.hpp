@@ -6,6 +6,10 @@
 
 namespace pdc {
 
+/**
+ * Starts server.
+ * @param conf Configuration of server
+ */
 void start(config conf);
 
 } // namespace pdc
