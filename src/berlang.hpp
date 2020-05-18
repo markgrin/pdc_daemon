@@ -3,9 +3,9 @@
 #define HPP_B8FC6211CE06414788CB151FBE2FC2E4
 
 #include "method.hpp"
-#include "../math/emp_dist.hpp"
-#include "../math/berlang.hpp"
-#include "../math/bern_stat.hpp"
+#include "math/emp_dist.hpp"
+#include "math/berlang.hpp"
+#include "math/bern_stat.hpp"
 #include "progressive.hpp"
 
 
@@ -39,8 +39,6 @@ public:
         possible_intensity; // /= pickup prob.
         double mean = service_dist.mean();
         double per_second = (mean ? possible_intensity / (mean * busy_stat.get_p()) : 0);
-        std::cout << "per_second:" << per_second << " or every " << 1 / per_second << "\n";
-        std::cout << "busy:" << busy_stat.get_p();
         return MethodResult(per_second);
     }
 };

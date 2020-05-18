@@ -4,10 +4,9 @@
 
 #include "method.hpp"
 #include "progressive.hpp"
-#include "../math/emp_dist.hpp"
-#include "../math/bin_poi.hpp"
-#include "../math/bern_stat.hpp"
-#include "../common/timer.hpp"
+#include "math/emp_dist.hpp"
+#include "math/bin_poi.hpp"
+#include "math/bern_stat.hpp"
 #include <iostream>
 
 namespace pdc {
@@ -40,7 +39,6 @@ public:
             return Progressive().calculate(agents, setup, service);
         }
         agents = agents - service.size();
-        std::cout << agents << "\n";
         bool success = true;
         double mean_sum = (setup_dist.mean() + service_dist.mean()) / 3;
         double time_step = mean_sum / 3;

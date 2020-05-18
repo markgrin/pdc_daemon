@@ -6,40 +6,111 @@
 #include <map>
 #include <thread>
 #include <deque>
+#include "grin.hpp"
+#include "berlang.hpp"
 
 namespace pdc {
+
+#define PROGRESSIVE_SESSION
+
+#ifdef PROGRESSIVE_SESSION
 
 /**
  * Session - stores, updates statistics. Calculates number of calls to make based on statistics.
  */
 class session {
 
-    std::deque<std::size_t> setup_;
-    std::deque<std::size_t> talk_;
-    std::size_t stat_size_;
+    public:
+    std::mutex lock_; /// locking is delegated to caller
+
+    explicit session (double critical) {
+    }
+
+    void add(double setup, double talk) {
+        return ;
+    }
+
+    void addBusy(double setup) {
+        return ;
+    }
+
+    double get(std::size_t agents, std::vector<double> setup, std::vector<double> service) {
+        return std::max(agents, setup.size()) - setup.size();
+    }
+
+};
+#endif // PROGRESSIVE_SESSION
+
+
+
+#ifdef BERLANG_SESSION
+
+/**
+ * Session - stores, updates statistics. Calculates number of calls to make based on statistics.
+ */
+class session {
+
+    Berlang berlang;
 
     public:
     std::mutex lock_; /// locking is delegated to caller
 
-    explicit session (std::size_t stat_size)
-    :
-    stat_size_(stat_size) {
+    void add(double setup, double talk) {
+        Call call{true, setup, talk};
+        berlang.addCall(call);
     }
 
-    void add(std::size_t setup, std::size_t talk) {
-        setup_.push_back(setup);
-        talk_.push_back(talk);
-        if (setup_.size() > stat_size_) {
-            setup_.pop_front();
-            talk_.pop_front();
-        }
+    session(double critical) {
+        berlang.set_critical(critical);
     }
 
-    std::size_t get(std::size_t free, std::size_t incoming) const {
-        return std::max(incoming, free) - incoming; // real predictive dialer would implement some algorithm here
+    void addBusy(double setup) {
+        berlang.addBusy(setup);
+    }
+
+    double get(std::size_t agents, std::vector<double> setup, std::vector<double> service) {
+        return berlang.calculate(agents, setup, service).rate;
     }
 
 };
+
+#endif // BERLANG_SESSION
+
+
+#ifdef GRIN_SESSION
+
+/**
+ * Session - stores, updates statistics. Calculates number of calls to make based on statistics.
+ */
+class session {
+
+    Grin grin;
+
+    public:
+    std::mutex lock_; /// locking is delegated to caller
+
+    session(double critical) {
+        grin.set_critical(critical);
+    }
+
+    void add(double setup, double talk) {
+        Call call{true, setup, talk};
+        grin.addCall(call);
+    }
+
+    void addBusy(double setup) {
+        grin.addBusy(setup);
+    }
+
+    double get(std::size_t agents, std::vector<double> setup, std::vector<double> service) {
+        return grin.calculate(agents, setup, service).calls;
+    }
+
+};
+
+
+
+#endif // GRIN_SESSION
 
 /**
  * Session manager. It stores, manages sessions. Directs reqeusts to them.

@@ -2,6 +2,8 @@
 
 #include "session.hpp"
 
+#define BOOST_BEAST_ALLOW_DEPRECATED
+
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
@@ -13,6 +15,7 @@
 #include <list>
 #include <memory>
 #include <string>
+
 
 
 namespace beast = boost::beast;

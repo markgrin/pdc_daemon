@@ -2,7 +2,6 @@
 
 #include <boost/multiprecision/cpp_complex.hpp>
 #include <complex>
-#include "../common/timer.hpp"
 
 
 namespace pdc {
