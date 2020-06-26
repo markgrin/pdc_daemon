@@ -74,8 +74,11 @@ private:
                 parser_,
                 [this](beast::error_code ec, std::size_t) {
                     if (ec) {
+                        std::cout << "REQUEST ERROR\n";
+                        std::cout << ec.message() << "\n";
                         ptr_.reset();
                     } else {
+                        std::cout << "PROCESSING REQUEST\n";
                         process_request(parser_.get());
                     }
                 });
@@ -129,6 +132,7 @@ void accept(net::io_context &ioc, boost::asio::ip::tcp::acceptor &acceptor, pdc:
     acceptor.async_accept(
             [&manager, &ioc, &acceptor](beast::error_code ec, tcp::socket socket) {
                 if (!ec) {
+                    std::cout << "ACCEPTING\n";
                     (new worker(ioc, std::move(socket), manager))->start();
                 }
                 accept(ioc, acceptor, manager);
@@ -145,7 +149,8 @@ void start(config conf)
 
     session_manager manager;
 
-    net::io_context ioc;
+    std::size_t threads_count = (conf.threads ? conf.threads : std::thread::hardware_concurrency());
+    net::io_context ioc(threads_count);
     boost::asio::ip::tcp::acceptor acceptor(ioc);
     boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
     acceptor.open(endpoint.protocol());
@@ -155,7 +160,19 @@ void start(config conf)
 
     accept(ioc, acceptor, manager);
 
+    std::vector<std::thread> threads;
+    for (std::size_t i = 0; i < threads_count - 1; i++) {
+        threads.emplace_back([&ioc]() {
+        std::cout << "RUNNING\n";
+            ioc.run();
+        });
+    }
+
     ioc.run();
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
 }
 
 } // namespace pdc

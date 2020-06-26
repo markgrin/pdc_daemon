@@ -12,6 +12,11 @@ void get_int(int& destination, Json::Value& source) {
         destination = source.asInt();
 }
 
+void get_uint(std::size_t& destination, Json::Value& source) {
+    if (source.isUInt())
+        destination = source.asUInt();
+}
+
 } // namespace
 
 namespace pdc {
@@ -31,6 +36,7 @@ config read_config (const std::string& filename) {
     }
 
     get_int(conf.port, root["port"]);
+    get_uint(conf.threads, root["threads"]);
 
     return config();
 }

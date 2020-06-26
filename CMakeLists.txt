@@ -17,3 +17,10 @@ add_executable(${PROJECT_NAME}
     src/math/emp_dist.cpp)
 target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${Boost_LIBRARIES} jsoncpp pthread)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+
+add_executable(tester tests/libuv_tester/main.cpp
+    tests/libuv_tester/uv_wrapper.cpp
+    tests/libuv_tester/session.cpp
+    tests/libuv_tester/message.cpp)
+target_link_libraries(tester uv)
+

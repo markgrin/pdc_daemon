@@ -53,12 +53,12 @@ std::string session_manager::action(std::string string) {
             storage_.erase(args["session"]);
         } else if (command == "add") {
             if (args.find("session") == args.end())
-                return "{ \"error\" : \"bad_input\"}";
+                return "{ \"error\" : \"bad_input no session\"}";
 
             std::unique_lock<std::mutex> master_guard(lock_);
             auto it = storage_.find(args["session"]);
             if (it == storage_.end())
-                return "{ \"error\" : \"bad_input\"}";
+                return "{ \"error\" : \"bad_input unknown session\"}";
             std::lock_guard<std::mutex> guard(it->second.lock_);
             master_guard.unlock();
             if (args.find("busy") == args.end()) {
@@ -88,12 +88,12 @@ std::string session_manager::action(std::string string) {
             auto result = it->second.get(std::stoull(args["agents"]), setup, service);
             return "{ \"call\" : \"" + std::to_string(result) + "\" }";
         } else {
-            return "{ \"error\" : \"bad_input\"}";
+            return "{ \"error\" : \"bad_input unknown command\"}";
         }
         return "{ \"success\" : \"true\"}";
     } catch (...) {
     }
-    return "{ \"error\" : \"bad_input\"}";
+    return "{ \"error\" : \"bad_input unknown error\"}";
 }
 
 

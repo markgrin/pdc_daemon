@@ -11,6 +11,7 @@ namespace pdc {
  */
 struct config {
     int port = 1235;
+    std::size_t threads = 0;
 };
 
 /**
