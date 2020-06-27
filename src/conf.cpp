@@ -38,7 +38,7 @@ config read_config (const std::string& filename) {
     get_int(conf.port, root["port"]);
     get_uint(conf.threads, root["threads"]);
 
-    return config();
+    return conf;
 }
 
 } //namespace pdc

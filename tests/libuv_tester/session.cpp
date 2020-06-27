@@ -20,8 +20,7 @@ void do_shutdown (context* con, T* any_handle) {
 }
 
 void alloc(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
-    buf->base = new char[suggested_size];
-    buf->len = suggested_size;
+    *buf = *uvpp::payload<uv_buf_t>(handle->loop);
 }
 
 void on_read (uv_stream_t* read, ssize_t nread, const uv_buf_t* buf) {
@@ -34,24 +33,9 @@ void on_read (uv_stream_t* read, ssize_t nread, const uv_buf_t* buf) {
 
 void on_write(uv_write_t* req_con, int status) {
     auto cont = uvpp::payload<context>(req_con);
+    uvpp::payload<context>(req_con->handle) = cont;
 
     uv_read_start(req_con->handle, alloc, on_read);
-}
-
-void write_callback(uv_work_t* handle, int status) {
-    auto con = uvpp::payload<context>(handle);
-    auto req_con = con->connection.get();
-    uv_write(con->write.get(), (uv_stream_t*)req_con->handle, &buf, 1, on_write);
-    uvpp::payload<context>(req_con->handle) = con;
-    uvpp::payload<context>(con->write.get()) = con;
-}
-
-void prepare_write(uv_work_t* work) {
-    auto con = uvpp::payload<context>(work);
-    auto req_con = con->connection.get();
-
-    auto buf = get_message(con->index, con->state);
-
 }
 
 void on_connect(uv_connect_t* req_con, int status) {
@@ -59,9 +43,10 @@ void on_connect(uv_connect_t* req_con, int status) {
     if (status < 0) {
         do_shutdown(con, con->socket.get());
     }
-    con->func.function = do_write;
-    uvpp::payload<uvpp::function_context>(con->work.get()) = &(con->func);
-    uvpp::async_func(con->work.get(), con->loop, empty_callback);
+
+    auto buf = (con->state ? con->write_add_buf : con->write_init_buf).get();
+    uvpp::payload<context>(con->write.get()) = con;
+    uv_write(con->write.get(), (uv_stream_t*)req_con->handle, buf, 1, on_write);
 }
 
 void restart (context* con) {
@@ -82,7 +67,11 @@ void launch(context* con, uv_loop_t* loop) {
     con->work = std::unique_ptr<uv_work_t>(new uv_work_t);
     con->socket = uvpp::make_tcp(loop);
     con->func.context = reinterpret_cast<void*>(con);
+    con->read_buf = uvpp::make_buf(1024 * 64);
+    con->write_init_buf = get_message(con->index, 0);
+    con->write_add_buf = get_message(con->index, 1);
 
+    uvpp::payload<uv_buf_t>(con->loop) = con->read_buf.get();
     uvpp::payload<context>(con->connection.get()) = con;
     uvpp::payload<context>(con->shutdown.get()) = con;
 

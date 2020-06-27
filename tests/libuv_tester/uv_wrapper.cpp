@@ -46,7 +46,9 @@ void free_buf(uv_buf_t* buf) {
 }
 
 unique_buf make_buf(std::size_t size) {
-
+    uv_buf_t* res = new uv_buf_t;
+    *res = uv_buf_init(new char[size], size);
+    return unique_buf(res, free_buf);
 }
 
 sockaddr get_addr(const char* addr, unsigned short port) {

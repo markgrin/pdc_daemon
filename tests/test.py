@@ -6,14 +6,15 @@ def get (action, args):
     r = requests.get(url = URL, params = args)
     print (r.json())
 
-session = str(random.randint(0, 100000))
+session = str('kek')
 
-get ('begin', {'stat_size' : 200, 'session' : session})
+#get ('begin', {'stat_size' : 200, 'session' : session})
+get ('add', {'agents' : 20, 'setup' : random.randint(0, 10), 'service' : random.randint(0, 10), 'session' : session})
 
-for i in range(1000):
-    get ('add', {'agents' : 20, 'setup' : random.randint(0, 10), 'service' : random.randint(0, 10), 'session' : session})
-    get ('add', {'busy' : 1, 'agents' : 20, 'setup' : random.randint(0, 10), 'service' : random.randint(0, 10), 'session' : session})
-    get ('get', {'agents' : 20, 'service' : random.randint(0, 10), 'setup' : random.randint(0, 10),
-'session' : session})
-
-get ('end', {'session' : session})
+#for i in range(1000):
+#    get ('add', {'agents' : 20, 'setup' : random.randint(0, 10), 'service' : random.randint(0, 10), 'session' : session})
+#    get ('add', {'busy' : 1, 'agents' : 20, 'setup' : random.randint(0, 10), 'service' : random.randint(0, 10), 'session' : session})
+#    get ('get', {'agents' : 20, 'service' : random.randint(0, 10), 'setup' : random.randint(0, 10),
+#'session' : session})
+#
+#get ('end', {'session' : session})

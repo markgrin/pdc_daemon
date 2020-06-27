@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string.h>
 
+
 namespace {
 
 const char* CREATE_MESSAGE = "GET /begin?session=0000&stat_size=200 HTTP/1.1\r\n\
@@ -22,20 +23,18 @@ Connection: keep-alive\r\n\
 
 } // namespace
 
-uv_buf_t get_message(std::size_t index, std::size_t state) {
+uvpp::unique_buf get_message(std::size_t index, std::size_t state) {
     std::size_t length = (state > 0 ? 190 : 178);
     std::size_t dif = 2;
-    std::cout << "LEEEEENGTH:" << length << "\n";
-    uv_buf_t buf = uv_buf_init(new char[length], length);
+    auto result = uvpp::make_buf(length);
     const char* msg = CREATE_MESSAGE;
     if (state > 0) {
         dif = 0;
         msg = STAT_MESSAGE;
     }
-    std::copy(msg, msg + length, buf.base);
-    std::cout << buf.base << "\n";
-    buf.base[18 + dif] = '0' - static_cast<char>(index % 10);
-    buf.base[19 + dif] = '0' - static_cast<char>(index / 10);
+    std::copy(msg, msg + length, result->base);
+    result->base[18 + dif] = '0' - static_cast<char>(index % 10);
+    result->base[19 + dif] = '0' - static_cast<char>(index / 10);
 
-    return buf;
+    return result;
 }

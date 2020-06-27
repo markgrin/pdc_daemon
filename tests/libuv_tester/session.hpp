@@ -15,7 +15,9 @@ struct context {
     std::unique_ptr<uv_write_t> write;
     std::unique_ptr<uv_write_t> read;
     std::unique_ptr<uv_work_t> work;
-    std::unique_ptr<char[]> buffer;
+    uvpp::unique_buf read_buf;
+    uvpp::unique_buf write_init_buf;
+    uvpp::unique_buf write_add_buf;
     uv_loop_t* loop;
     std::size_t index;
     std::size_t state;
@@ -31,7 +33,10 @@ struct context {
       loop (nullptr),
       index (index_),
       state (0),
-      func ()
+      func (),
+      read_buf (nullptr, nullptr),
+      write_init_buf(nullptr, nullptr),
+      write_add_buf(nullptr, nullptr)
       {
           endpoint = uvpp::get_addr("127.0.0.1", 1235);
       }

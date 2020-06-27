@@ -78,7 +78,6 @@ private:
                         std::cout << ec.message() << "\n";
                         ptr_.reset();
                     } else {
-                        std::cout << "PROCESSING REQUEST\n";
                         process_request(parser_.get());
                     }
                 });
@@ -132,7 +131,6 @@ void accept(net::io_context &ioc, boost::asio::ip::tcp::acceptor &acceptor, pdc:
     acceptor.async_accept(
             [&manager, &ioc, &acceptor](beast::error_code ec, tcp::socket socket) {
                 if (!ec) {
-                    std::cout << "ACCEPTING\n";
                     (new worker(ioc, std::move(socket), manager))->start();
                 }
                 accept(ioc, acceptor, manager);
@@ -161,9 +159,9 @@ void start(config conf)
     accept(ioc, acceptor, manager);
 
     std::vector<std::thread> threads;
+    std::cout << "RUNNING" << threads_count << "\n";
     for (std::size_t i = 0; i < threads_count - 1; i++) {
         threads.emplace_back([&ioc]() {
-        std::cout << "RUNNING\n";
             ioc.run();
         });
     }
